@@ -44,13 +44,24 @@ backup_and_clear() { # dest
 get_repo_extracted() { # repo_url workdir -> echoes inner root
   local repo="$1" work="$2" prefix="${DEAI_GH_PREFIX:-}" zip="$2/repo.zip"
   for branch in main master; do
-    if curl -fsSL --retry 3 -o "$zip" "${prefix}${repo}/archive/refs/heads/${branch}.zip"; then
+    if curl -fsSL --connect-timeout 8 --max-time 60 --retry 1 -o "$zip" "${prefix}${repo}/archive/refs/heads/${branch}.zip"; then
       if command -v unzip >/dev/null 2>&1; then unzip -q -o "$zip" -d "$work/ex"
       else python3 -c "import sys,zipfile;zipfile.ZipFile('$zip').extractall('$work/ex')"; fi
       find "$work/ex" -mindepth 1 -maxdepth 1 -type d | head -n 1 | while read -r d; do echo "$d"; return 0; done
     fi
   done
   echo "download failed: $repo" >&2; return 1
+}
+
+vendor_fallback() { # name reason -> 0 if installed from repo bundle
+  local name="$1" reason="$2"
+  [ -f "$src_root/vendor/$name/SKILL.md" ] || return 1
+  mkdir -p "$AGENTS_ROOT"
+  backup_and_clear "$AGENTS_ROOT/$name"
+  cp -R "$src_root/vendor/$name" "$AGENTS_ROOT/$name"
+  installed="$installed $name"
+  echo "      [install] $name <- repo bundle (upstream failed: $reason)"
+  return 0
 }
 
 mode=""; [ $CHECK_ONLY -eq 1 ] && mode='[CHECK-ONLY] '
@@ -128,7 +139,10 @@ while IFS=$'\t' read -r name repo path aliases status; do
     continue
   fi
   if [ $CHECK_ONLY -eq 1 ]; then
-    installed="$installed $name"; echo "      [would]  install $name from $repo"; continue
+    installed="$installed $name"
+    extra=""; [ -f "$src_root/vendor/$name/SKILL.md" ] && extra=' (bundle fallback ready)'
+    echo "      [would]  install $name from $repo$extra"
+    continue
   fi
   work="$(mktemp -d)"
   if repo_root="$(get_repo_extracted "$repo" "$work")"; then
@@ -144,10 +158,10 @@ while IFS=$'\t' read -r name repo path aliases status; do
       cp -R "$skill_src" "$AGENTS_ROOT/$name"
       installed="$installed $name"; echo "      [install] $name -> $AGENTS_ROOT/$name"
     else
-      failed="$failed $name"; echo "      [FAIL]   $name : SKILL.md not found inside repo"
+      vendor_fallback "$name" "SKILL.md not found inside repo" || failed="$failed $name"
     fi
   else
-    failed="$failed $name"
+    vendor_fallback "$name" "download failed" || failed="$failed $name"
   fi
   rm -rf "$work"
 done < <(read_registry)

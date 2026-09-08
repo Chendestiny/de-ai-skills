@@ -46,7 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 ## 设计原则
 
 1. **总舵手保持薄**：路由、流水线、冲突裁决、安装自检，四件事，不吸改写逻辑
-2. **fetch-at-install**：子技能装时从各自上游拉取，本仓库不 vendor 任何第三方代码
+2. **上游优先 + 内置兜底**：子技能装时优先从各自上游拉取；三个必装核心（humanizer-zh / humanizer / stop-slop，均 MIT）以内置包形式随仓库分发（`vendor/`），上游失败时自动降级到内置包。其余子技能不打包：nuwa 34MB 太重，无 LICENSE 的永不入仓
 3. **事实红线**：流水线全程不得新增或丢失事实、数字、日期、出处
 4. **写读分离**：改写技能不给自己打分，质检永远由 stop-slop 独立执行
 5. **作者样本优先**：nuwa 蒸馏的用户文风覆盖默认禁令（防止两个改写器互相拆台——一次重写带双参数，不串行两刀）
@@ -54,7 +54,7 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 ## 许可证
 
 - 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)
-- 子技能版权归各自上游作者，通过安装器从源头获取；**两个上游无 LICENSE 的（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
+- 三个核心子技能（humanizer / humanizer-zh / stop-slop，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
 
 ## 开发模型
 

@@ -15,6 +15,7 @@
       "aliases": [],
       "license": "present",
       "optional": false,
+      "bundled": true,
       "note": "中文主改写：24类AI模式清除 + 注入个性"
     },
     {
@@ -25,6 +26,7 @@
       "aliases": [],
       "license": "present",
       "optional": false,
+      "bundled": true,
       "note": "英文主改写：35模式，基于 Wikipedia Signs of AI writing"
     },
     {
@@ -35,6 +37,7 @@
       "aliases": [],
       "license": "present",
       "optional": false,
+      "bundled": true,
       "note": "质检门禁：Quick Checks + 五维评分（50分制，<35打回）"
     },
     {

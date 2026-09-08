@@ -55,9 +55,10 @@ function Backup-AndClear([string]$Dest) {
 }
 
 function Get-HttpFile([string]$Url, [string]$Out) {
-    try { Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing; return $true } catch { }
+    # fail fast: tight timeouts so the vendor fallback kicks in quickly when upstream is unreachable
+    try { Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -TimeoutSec 15; return $true } catch { }
     if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-        & curl.exe -fsSL --retry 3 --ssl-no-revoke -o $Out $Url
+        & curl.exe -fsSL --connect-timeout 8 --max-time 60 --retry 1 --ssl-no-revoke -o $Out $Url
         return ($LASTEXITCODE -eq 0)
     }
     return $false
@@ -169,7 +170,8 @@ foreach ($s in $registry.skills) {
     }
     if ($CheckOnly) {
         $installed += $name
-        Write-Host "      [would]  install $name from $($s.repo)"
+        $bundled = Test-Path (Join-Path $srcRoot ("vendor\" + $name + '\SKILL.md'))
+        Write-Host ("      [would]  install $name from $($s.repo)" + $(if ($bundled) { ' (bundle fallback ready)' }))
         continue
     }
     try {
@@ -188,8 +190,18 @@ foreach ($s in $registry.skills) {
         Write-Host "      [install] $name -> $dest"
         Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
     } catch {
-        $failed += $name
-        Write-Host "      [FAIL]   $name : $($_.Exception.Message)"
+        # fallback: repo-bundled vendor package (MIT skills shipped in this repo)
+        $vendorDir = Join-Path $srcRoot ("vendor\" + $name)
+        if (Test-Path (Join-Path $vendorDir 'SKILL.md')) {
+            $dest = Join-Path $agentsRoot $name
+            Backup-AndClear $dest
+            Copy-Item $vendorDir $dest -Recurse -Force
+            $installed += $name
+            Write-Host "      [install] $name <- repo bundle (upstream failed: $($_.Exception.Message))"
+        } else {
+            $failed += $name
+            Write-Host "      [FAIL]   $name : $($_.Exception.Message)"
+        }
     }
 }
 
