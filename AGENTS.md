@@ -37,6 +37,10 @@ $env:DEAI_GH_PREFIX='<mirror>/'   # GitHub 镜像前缀
 
 判断"已安装"：在 `~/.agents/skills/<name>` 或 `~/.dsh/skills/<name>` 下存在 `SKILL.md`，name 匹配 canonical 或任一 alias。
 
+## 文风插槽
+
+作者样本不绑定任何技能名（个人风格技能各用户名字不同，不能当统一格式）。按优先级解析：① 环境变量 `DEAI_STYLE_SKILL` 点名的技能（用户级配置，如自己用 nuwa-skill 蒸馏的风格技能）② 提示词"用我的文风"按 description 匹配已装技能 ③ `nuwa-skill` 现场蒸馏旧文样本 ④ 无样本走默认规则。统一入口永远是【去AI味】触发词，文风插槽只是可选修饰。
+
 ## 维护规则
 
 - **registry.json 是唯一清单**：加/换子技能只改它，不改安装器逻辑

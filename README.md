@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 ```
 0 源头预防（可选，动笔前）   提示词先过 de-ai-prompt-enhancer，喂真实素材
 1 标记                      按主技能模式清单逐项标出 AI 痕迹
-2 一次重写                  主技能整段重写 + nuwa 文风档案作"作者样本"注入
+2 一次重写                  主技能整段重写 + 文风插槽作"作者样本"注入（DEAI_STYLE_SKILL / 提示词点名 / nuwa 现蒸）
 3 质检门禁                  stop-slop Quick Checks + 五维评分，<35/50 打回
 4 交付                      全文 + 修改点摘要 + 评分表 + 残余风险
 ```
