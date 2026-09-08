@@ -15,8 +15,6 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 .\install.ps1 -CheckOnly      # 或: bash install.sh --check
 ```
 
-GitHub 慢/被墙时：`$env:DEAI_GH_PREFIX = 'https://ghfast.top/'`（Unix 用 `export DEAI_GH_PREFIX=...`）后重跑。
-
 装完对任意 agent 说 **"给这篇文章去AI味"** 即可触发。
 
 ## 它是什么
@@ -61,7 +59,7 @@ GitHub 慢/被墙时：`$env:DEAI_GH_PREFIX = 'https://ghfast.top/'`（Unix 用 
 ## 开发模型
 
 ```
-D:\Project\deai-skills（开发，git 源码）
+本地源码仓（clone 本仓库，git 管理）
         ↓ push
 GitHub Chendestiny/deai-skills（分发入口）
         ↓ install.ps1 / install.sh

@@ -15,8 +15,6 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 .\install.ps1 -CheckOnly      # or: bash install.sh --check
 ```
 
-Slow/blocked GitHub: set `DEAI_GH_PREFIX` to a mirror prefix and re-run.
-
 ## What it is
 
 `deai` is a router/combinator. It never rewrites a word itself; it routes by language and task, then orchestrates:

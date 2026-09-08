@@ -142,6 +142,31 @@ foreach ($s in $registry.skills) {
         Write-Host "      [skip]   $name already present: $existing"
         continue
     }
+    # offline cache: env DEAI_OFFLINE_DIR (your local repo downloads) or <srcRoot>\offline.
+    # Tolerant match: dir named <canonical> or <canonical>-main (case-insensitive), must contain SKILL.md.
+    $offlineHit = $null
+    foreach ($base in @(([string]$env:DEAI_OFFLINE_DIR), (Join-Path $srcRoot 'offline'))) {
+        if (-not $base -or -not (Test-Path $base)) { continue }
+        foreach ($suffix in @('', '-main')) {
+            $want = $name + $suffix
+            $hit = Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -ieq $want } | Select-Object -First 1
+            if ($hit -and (Test-Path (Join-Path $hit.FullName 'SKILL.md'))) { $offlineHit = $hit.FullName; break }
+        }
+        if ($offlineHit) { break }
+    }
+    if ($offlineHit) {
+        if ($CheckOnly) {
+            $installed += $name
+            Write-Host "      [would]  install $name from offline cache ($offlineHit)"
+        } else {
+            $dest = Join-Path $agentsRoot $name
+            Backup-AndClear $dest
+            Copy-Item $offlineHit $dest -Recurse -Force
+            $installed += $name
+            Write-Host "      [install] $name <- offline cache ($offlineHit)"
+        }
+        continue
+    }
     if ($CheckOnly) {
         $installed += $name
         Write-Host "      [would]  install $name from $($s.repo)"

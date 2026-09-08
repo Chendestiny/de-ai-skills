@@ -43,4 +43,5 @@ $env:DEAI_GH_PREFIX='<mirror>/'   # GitHub 镜像前缀
 - 上游 URL 变更 / 分支从 main 变 master：改 repo 字段即可，安装器两个分支都会试
 - 新增 deferred 条目：`skill_path` 留 null + `status: "deferred"`
 - 别名产生（用户机器上被改名安装）：追加到该条目的 aliases 数组
-- 本项目自己的改动永远发生在源码仓（D:\Project\deai-skills → GitHub），不要直接改运行态目录（重装会被备份覆盖）
+- 本项目自己的改动永远发生在源码仓（本仓库的本地 clone → push GitHub），不要直接改运行态目录（重装会被备份覆盖）
+- **离线兜底**：设置环境变量 `DEAI_OFFLINE_DIR` 指向本地已下载的上游仓库目录（安装器按 `<canonical>` 或 `<canonical>-main` 忽略大小写匹配，命中目录需含 SKILL.md）；或在源码仓 `offline/<canonical>/` 放副本（已 gitignore）。命中即免网络。核心备三个必装项即可（humanizer-zh / humanizer / stop-slop），可选子技能装不上只降级不阻塞。注意：本地快照不会自动跟进上游，要"最新"需重新下载

@@ -105,6 +105,28 @@ while IFS=$'\t' read -r name repo path aliases status; do
   if found="$(find_skill_dir "$name" ${aliases:+${aliases//,/ }})"; then
     skipped="$skipped $name"; echo "      [skip]   $name already present: $found"; continue
   fi
+  # offline cache: env DEAI_OFFLINE_DIR (local repo downloads) or <src_root>/offline.
+  # Tolerant match: <canonical> or <canonical>-main, case-insensitive, must contain SKILL.md.
+  local_cache=""
+  for base in "${DEAI_OFFLINE_DIR:-}" "$src_root/offline"; do
+    [ -n "$base" ] && [ -d "$base" ] || continue
+    for suffix in "" "-main"; do
+      hit="$(find "$base" -maxdepth 1 -iname "$name$suffix" -type d 2>/dev/null | head -n 1)"
+      if [ -n "$hit" ] && [ -f "$hit/SKILL.md" ]; then local_cache="$hit"; break; fi
+    done
+    [ -n "$local_cache" ] && break
+  done
+  if [ -n "$local_cache" ]; then
+    if [ $CHECK_ONLY -eq 1 ]; then
+      installed="$installed $name"; echo "      [would]  install $name from offline cache ($local_cache)"
+    else
+      mkdir -p "$AGENTS_ROOT"
+      backup_and_clear "$AGENTS_ROOT/$name"
+      cp -R "$local_cache" "$AGENTS_ROOT/$name"
+      installed="$installed $name"; echo "      [install] $name <- offline cache ($local_cache)"
+    fi
+    continue
+  fi
   if [ $CHECK_ONLY -eq 1 ]; then
     installed="$installed $name"; echo "      [would]  install $name from $repo"; continue
   fi
