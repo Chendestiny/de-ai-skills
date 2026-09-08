@@ -4,6 +4,8 @@
 
 ## 安装
 
+**方式一 · 安装器**（推荐，自动补齐子技能 + 内置兜底）：
+
 ```powershell
 # Windows（任意 agent 或终端）
 irm https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.ps1 | iex
@@ -14,6 +16,15 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 # 只看会装什么，不实际写入
 .\install.ps1 -CheckOnly      # 或: bash install.sh --check
 ```
+
+**方式二 · 通过 skills 生态安装**（[skills.sh](https://skills.sh) / Clawhub 等市场用户）：
+
+```bash
+npx skills add Chendestiny/deai-skills
+```
+
+> 整个仓库就是一个 skill bundle（根目录 SKILL.md + registry + 安装器），安装时整目录拷入 skills 目录。
+> 此方式只装路由本体，子技能（humanizer-zh 等）不会自动补齐——对 agent 说"去AI味"时按 SKILL.md 第零步引导跑安装器补上即可。
 
 装完对任意 agent 说 **"给这篇文章去AI味"** 即可触发。
 

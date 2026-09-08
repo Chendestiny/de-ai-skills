@@ -1,6 +1,6 @@
 ---
 name: deai
-description: 去AI味总舵手（路由与组合器）。当用户说"给XX文章去AI味 / 去AI痕迹 / 人性化改写 / 这文章太AI了 / 没人味 / 不像人写的 / humanize / de-AI / remove AI flavor"时必须先加载本技能。它判定语言与任务类型并路由子技能：中文→humanizer-zh，英文→humanizer，UI/前端→taste-skill；nuwa-skill 蒸馏作者文风作为重写样本，stop-slop 做质检评分门禁。子技能缺失时按 registry.json 引导安装（deai-skills 项目）。
+description: 去AI味总舵手（路由与组合器）。当用户说"给XX文章去AI味 / 去AI痕迹 / 人性化改写 / 这文章太AI了 / 没人味 / 不像人写的 / humanize / de-AI / remove AI flavor"时必须先加载本技能。它判定语言与任务并路由子技能（中文→humanizer-zh，英文→humanizer，UI→taste-skill），文风插槽（DEAI_STYLE_SKILL 环境变量 / 提示词点名 / nuwa-skill 现蒸）注入作者样本，stop-slop 做质检评分门禁，子技能缺失按 registry.json 引导安装。 The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, QA score), one-line install with bundled core fallback.
 ---
 
 # deai: 去AI味总舵手
