@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "project": "deai-skills",
+  "router": {
+    "canonical": "deai",
+    "source": "this-repo",
+    "note": "去AI味总舵手：路由与组合器，本仓库自带，随安装器部署"
+  },
+  "skills": [
+    {
+      "canonical": "humanizer-zh",
+      "lane": "zh-rewrite",
+      "repo": "https://github.com/op7418/Humanizer-zh",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": false,
+      "note": "中文主改写：24类AI模式清除 + 注入个性"
+    },
+    {
+      "canonical": "humanizer",
+      "lane": "en-rewrite",
+      "repo": "https://github.com/blader/humanizer",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": false,
+      "note": "英文主改写：35模式，基于 Wikipedia Signs of AI writing"
+    },
+    {
+      "canonical": "stop-slop",
+      "lane": "qa",
+      "repo": "https://github.com/hardikpandya/stop-slop",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": false,
+      "note": "质检门禁：Quick Checks + 五维评分（50分制，<35打回）"
+    },
+    {
+      "canonical": "nuwa-skill",
+      "lane": "style-distill",
+      "repo": "https://github.com/alchaincyf/nuwa-skill",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": true,
+      "note": "文风蒸馏：喂作者旧文生成文风档案，重写时作为作者样本注入"
+    },
+    {
+      "canonical": "taste-skill",
+      "lane": "ui",
+      "repo": "https://github.com/Leonxlnx/taste-skill",
+      "skill_path": "skills/taste-skill",
+      "aliases": ["design-taste-frontend"],
+      "license": "present",
+      "optional": true,
+      "note": "UI/前端反slop。上游存在同名分支（如 BND-1/taste-skill），安装以本条 repo 字段为准；本地已按别名安装过的直接跳过"
+    },
+    {
+      "canonical": "de-ai-prompt-enhancer",
+      "lane": "draft-prevent",
+      "repo": "https://github.com/gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL",
+      "skill_path": "de-AI-writing",
+      "aliases": [],
+      "license": "none",
+      "optional": true,
+      "note": "源头预防：优化提示词让初稿少AI味。上游无LICENSE：仅装时从上游拉取，禁止复制进任何再分发仓库"
+    },
+    {
+      "canonical": "chatgpt-comparison-detection",
+      "lane": "detect",
+      "repo": "https://github.com/Hello-SimpleAI/chatgpt-comparison-detection",
+      "skill_path": null,
+      "aliases": [],
+      "license": "none",
+      "optional": true,
+      "status": "deferred",
+      "note": "占位延后：实为HC3学术代码仓库（detect/HC3/linguistic_analysis），无SKILL.md。未来自写包装壳后再启用；启用后仅作改前定位参考，不作为交付判据"
+    }
+  ]
+}
