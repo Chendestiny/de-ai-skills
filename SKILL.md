@@ -1,5 +1,10 @@
 ---
 name: deai
+version: 1.0.0
+display_name: 去AI味总入口（deai）
+display_name_en: De-AI Router
+description_zh: 对任意 Agent 说一句"去AI味"，自动跑完标记、一次重写（文风注入）、stop-slop 质检评分的完整流水线，35/50 分以下自动打回重改。一行命令安装，内置 MIT 核心包兜底，子技能按 registry.json 自动补齐。
+description_en: The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, independent QA score gate below 35/50), one-line install with bundled MIT core fallback, sub-skills fetched per registry.
 description: 去AI味总入口（路由与组合器）。当用户说"给XX文章去AI味 / 去AI痕迹 / 人性化改写 / 这文章太AI了 / 没人味 / 不像人写的 / humanize / de-AI / remove AI flavor"时必须先加载本技能。它判定语言与任务并路由子技能（中文→humanizer-zh，英文→humanizer，UI→taste-skill），文风插槽（DEAI_STYLE_SKILL 环境变量 / 提示词点名 / nuwa-skill 现蒸）注入作者样本，stop-slop 做质检评分门禁，子技能缺失按 registry.json 引导安装。 The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, QA score), one-line install with bundled core fallback.
 ---
 
