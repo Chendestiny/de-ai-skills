@@ -170,7 +170,7 @@ foreach ($s in $registry.skills) {
     }
     if ($CheckOnly) {
         $installed += $name
-        $bundled = Test-Path (Join-Path $srcRoot ("vendor\" + $name + '\SKILL.md'))
+        $bundled = Test-Path (Join-Path $srcRoot ("vendor\" + $name + '.zip'))
         Write-Host ("      [would]  install $name from $($s.repo)" + $(if ($bundled) { ' (bundle fallback ready)' }))
         continue
     }
@@ -190,14 +190,16 @@ foreach ($s in $registry.skills) {
         Write-Host "      [install] $name -> $dest"
         Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
     } catch {
-        # fallback: repo-bundled vendor package (MIT skills shipped in this repo)
-        $vendorDir = Join-Path $srcRoot ("vendor\" + $name)
-        if (Test-Path (Join-Path $vendorDir 'SKILL.md')) {
+        # fallback: repo-bundled vendor zip (MIT skills shipped in this repo; zip form keeps
+        # the repo two-level on disk so strict skill markets accept the layout)
+        $vendorZip = Join-Path $srcRoot ("vendor\" + $name + '.zip')
+        if (Test-Path $vendorZip) {
             $dest = Join-Path $agentsRoot $name
             Backup-AndClear $dest
-            Copy-Item $vendorDir $dest -Recurse -Force
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            Expand-Archive -Path $vendorZip -DestinationPath $dest -Force
             $installed += $name
-            Write-Host "      [install] $name <- repo bundle (upstream failed: $($_.Exception.Message))"
+            Write-Host "      [install] $name <- repo bundle zip (upstream failed: $($_.Exception.Message))"
         } else {
             $failed += $name
             Write-Host "      [FAIL]   $name : $($_.Exception.Message)"

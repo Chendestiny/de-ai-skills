@@ -53,14 +53,16 @@ get_repo_extracted() { # repo_url workdir -> echoes inner root
   echo "download failed: $repo" >&2; return 1
 }
 
-vendor_fallback() { # name reason -> 0 if installed from repo bundle
+vendor_fallback() { # name reason -> 0 if installed from repo bundle zip
   local name="$1" reason="$2"
-  [ -f "$src_root/vendor/$name/SKILL.md" ] || return 1
+  [ -f "$src_root/vendor/$name.zip" ] || return 1
   mkdir -p "$AGENTS_ROOT"
   backup_and_clear "$AGENTS_ROOT/$name"
-  cp -R "$src_root/vendor/$name" "$AGENTS_ROOT/$name"
+  mkdir -p "$AGENTS_ROOT/$name"
+  if command -v unzip >/dev/null 2>&1; then unzip -q -o "$src_root/vendor/$name.zip" -d "$AGENTS_ROOT/$name"
+  else python3 -c "import sys,zipfile;zipfile.ZipFile('$src_root/vendor/$name.zip').extractall('$AGENTS_ROOT/$name')"; fi
   installed="$installed $name"
-  echo "      [install] $name <- repo bundle (upstream failed: $reason)"
+  echo "      [install] $name <- repo bundle zip (upstream failed: $reason)"
   return 0
 }
 
@@ -140,7 +142,7 @@ while IFS=$'\t' read -r name repo path aliases status; do
   fi
   if [ $CHECK_ONLY -eq 1 ]; then
     installed="$installed $name"
-    extra=""; [ -f "$src_root/vendor/$name/SKILL.md" ] && extra=' (bundle fallback ready)'
+    extra=""; [ -f "$src_root/vendor/$name.zip" ] && extra=' (bundle fallback ready)'
     echo "      [would]  install $name from $repo$extra"
     continue
   fi
