@@ -42,4 +42,4 @@ The installer skips what you already have (canonical or alias), fetches what is 
 ## License
 
 - This repo (router SKILL.md / registry.json / installers / docs): MIT — see [LICENSE](LICENSE)
-- Sub-skills belong to their upstream authors and are fetched at install time; nothing third-party is vendored here. The two upstreams without a LICENSE file are fetch-at-install only — never copy them into a redistributing repo.
+- Sub-skills belong to their upstream authors and are fetched at install time; the three MIT cores (humanizer / humanizer-zh / stop-slop) are bundled under `vendor/` with their LICENSEs kept as upstream-failure fallback. The two upstreams without a LICENSE file are fetch-at-install only — never copy them into a redistributing repo.

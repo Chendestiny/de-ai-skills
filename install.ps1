@@ -11,7 +11,7 @@
 #   1. Router skill 'deai' lands in a cross-agent skills dir (%USERPROFILE%\.agents\skills\deai),
 #      upgraded in place if it already exists there (old copy backed up, newest 2 kept)
 #   2. Sub-skills listed in registry.json are fetched from their upstream repos at install
-#      time (never vendored here). Skills already present (canonical or alias) are skipped.
+#      time (three MIT cores bundled under vendor/ as fallback). Skills already present (canonical or alias) are skipped.
 #   3. Deferred / null-path entries are reported but not installed.
 # NOTE: keep this file ASCII-only and BOM-less. It must survive `irm | iex` on both
 #       PowerShell 5.1 and PowerShell 7. Chinese docs live in README.md / SKILL.md / AGENTS.md.

@@ -4,7 +4,7 @@
   "router": {
     "canonical": "deai",
     "source": "this-repo",
-    "note": "去AI味总舵手：路由与组合器，本仓库自带，随安装器部署"
+    "note": "去AI味总入口：路由与组合器，本仓库自带，随安装器部署"
   },
   "skills": [
     {
@@ -45,7 +45,7 @@
       "lane": "style-distill",
       "repo": "https://github.com/alchaincyf/nuwa-skill",
       "skill_path": ".",
-      "aliases": [],
+      "aliases": ["huashu-nuwa"],
       "license": "present",
       "optional": true,
       "note": "文风蒸馏：喂作者旧文生成文风档案，重写时作为作者样本注入"

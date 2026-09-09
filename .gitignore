@@ -5,6 +5,7 @@ article/
 *.bak-*
 *.log
 .tmp-*
+temp/
 
 # ===== 本机个人操作 =====
 local/
