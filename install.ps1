@@ -1,7 +1,7 @@
-# deai-skills installer (de-AI skill router + sub-skills, fetch-at-install)
+# de-ai-skills installer (de-AI skill router + sub-skills, fetch-at-install)
 # Usage (any agent or terminal):
-#   Online:  irm https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.ps1 | iex
-#   Offline: download the repo zip, extract, then inside deai-skills-main run
+#   Online:  irm https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.ps1 | iex
+#   Offline: download the repo zip, extract, then inside de-ai-skills-main run
 #            powershell -ExecutionPolicy Bypass -File .\install.ps1
 #   Check only (no writes):  .\install.ps1 -CheckOnly
 #   Explicit source:         .\install.ps1 -Source <path to repo zip OR extracted folder>
@@ -22,7 +22,7 @@ param(
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$selfRepo = 'https://github.com/Chendestiny/deai-skills'
+$selfRepo = 'https://github.com/Chendestiny/de-ai-skills'
 $agentsRoot = Join-Path $HOME '.agents\skills'
 $dshRoot    = Join-Path $HOME '.dsh\skills'
 $roots = @($agentsRoot, $dshRoot) | Where-Object { Test-Path $_ }
@@ -83,7 +83,7 @@ function Get-RepoExtracted([string]$RepoUrl, [string]$WorkDir) {
 $mode = if ($CheckOnly) { '[CHECK-ONLY] ' } else { '' }
 
 # ---- [1/4] locate this project's source ----
-Write-Host "${mode}[1/4] Locate deai-skills source ..."
+Write-Host "${mode}[1/4] Locate de-ai-skills source ..."
 $srcRoot = $null
 if ($Source) {
     if (Test-Path $Source -PathType Leaf) {

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "project": "deai-skills",
+  "project": "de-ai-skills",
   "router": {
     "canonical": "de-ai",
     "source": "this-repo",

@@ -1,4 +1,4 @@
-# deai-skills: the de-AI router
+# de-ai-skills: the de-AI router
 
 One line: **say "de-AI this article" and one router runs you through marking → rewrite → style injection → QA scoring.**
 
@@ -6,10 +6,10 @@ One line: **say "de-AI this article" and one router runs you through marking →
 
 ```powershell
 # Windows
-irm https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.ps1 | iex
 
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.sh | bash
 
 # Dry run (no writes)
 .\install.ps1 -CheckOnly      # or: bash install.sh --check

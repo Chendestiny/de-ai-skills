@@ -1,4 +1,4 @@
-# deai-skills: 去AI味技能合集
+# de-ai-skills: 去AI味技能合集
 
 一句话：**说"去AI味"，一个路由带你跑完 检测标记 → 主技能重写 → 文风注入 → 质检评分 的完整流水线。**
 
@@ -8,10 +8,10 @@
 
 ```powershell
 # Windows（任意 agent 或终端）
-irm https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.ps1 | iex
 
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.sh | bash
 
 # 只看会装什么，不实际写入
 .\install.ps1 -CheckOnly      # 或: bash install.sh --check
@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 **方式二 · 通过 skills 生态安装**（[skills.sh](https://skills.sh) / Clawhub 等市场用户）：
 
 ```bash
-npx skills add Chendestiny/deai-skills
+npx skills add Chendestiny/de-ai-skills
 ```
 
 > 整个仓库就是一个 skill bundle（根目录 SKILL.md + registry + 安装器），安装时整目录拷入 skills 目录。
@@ -72,7 +72,7 @@ npx skills add Chendestiny/deai-skills
 ```
 本地源码仓（clone 本仓库，git 管理）
         ↓ push
-GitHub Chendestiny/deai-skills（分发入口）
+GitHub Chendestiny/de-ai-skills（分发入口）
         ↓ install.ps1 / install.sh
 ~/.agents/skills/de-ai + 子技能（运行态，agent 加载）
 ```

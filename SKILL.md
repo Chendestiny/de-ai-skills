@@ -29,10 +29,10 @@ description: 去AI味总入口（路由与组合器）。当用户说"给XX文�
 缺失时引导执行本项目安装器（或直接代跑）：
 
 ```
-Windows 在线:  irm https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.ps1 | iex
+Windows 在线:  irm https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.ps1 | iex
 Windows 本地:  powershell -ExecutionPolicy Bypass -File .\install.ps1
 只看缺什么:    .\install.ps1 -CheckOnly
-Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.sh | bash
+Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.sh | bash
 ```
 
 规则：

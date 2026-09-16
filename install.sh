@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# deai-skills installer (Unix). See install.ps1 for the Windows twin.
+# de-ai-skills installer (Unix). See install.ps1 for the Windows twin.
 # Usage:
-#   Online:      curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/install.sh | bash
+#   Online:      curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/install.sh | bash
 #   Offline:     bash install.sh
 #   Check only:  bash install.sh --check
 #   Mirror:      export DEAI_GH_PREFIX='https://ghfast.top/'
 set -euo pipefail
 
-SELF_REPO='https://github.com/Chendestiny/deai-skills'
+SELF_REPO='https://github.com/Chendestiny/de-ai-skills'
 AGENTS_ROOT="$HOME/.agents/skills"
 DSH_ROOT="$HOME/.dsh/skills"
 CHECK_ONLY=0
@@ -68,7 +68,7 @@ vendor_fallback() { # name reason -> 0 if installed from repo bundle zip
 
 mode=""; [ $CHECK_ONLY -eq 1 ] && mode='[CHECK-ONLY] '
 
-echo "${mode}[1/4] Locate deai-skills source ..."
+echo "${mode}[1/4] Locate de-ai-skills source ..."
 src_root=""
 if [ -f "$(dirname "$0")/registry.json" ]; then
   src_root="$(cd "$(dirname "$0")" && pwd)"
