@@ -106,15 +106,15 @@ Write-Host "      source: $srcRoot"
 
 $registry = Get-Content (Join-Path $srcRoot 'registry.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 
-# ---- [2/4] install / upgrade router skill 'deai' ----
-Write-Host "${mode}[2/4] Router skill 'deai' ..."
+# ---- [2/4] install / upgrade router skill 'de-ai' ----
+Write-Host "${mode}[2/4] Router skill 'de-ai' ..."
 $routerDest = $null
 foreach ($root in $roots) {
-    $p = Join-Path $root 'deai'
+    $p = Join-Path $root 'de-ai'
     if (Test-Path (Join-Path $p 'SKILL.md')) { $routerDest = $p; break }
 }
-if (-not $routerDest) { $routerDest = Join-Path $agentsRoot 'deai' }
-$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'registry.json', 'install.ps1', 'install.sh', 'LICENSE'
+if (-not $routerDest) { $routerDest = Join-Path $agentsRoot 'de-ai' }
+$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'registry.json', 'install.ps1', 'install.sh', 'LICENSE', 'scripts'
 if ($CheckOnly) {
     Write-Host ("      would {0} router at: {1}" -f (@{ $true = 'upgrade' }[$routerDest -ne $null] -replace '^$', 'install'), $routerDest)
 } else {

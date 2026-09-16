@@ -30,13 +30,13 @@ npx skills add Chendestiny/deai-skills
 
 ## 它是什么
 
-`deai` 是路由与组合器（总入口），自己不改一个字。它按语言和任务路由到子技能，并编排流水线：
+`de-ai` 是路由与组合器（总入口），自己不改一个字。它按语言和任务路由到子技能，并编排流水线：
 
 ```
 0 源头预防（可选，动笔前）   提示词先过 de-ai-prompt-enhancer，喂真实素材
 1 标记                      按主技能模式清单逐项标出 AI 痕迹
 2 一次重写                  主技能整段重写 + 文风插槽作"作者样本"注入（DEAI_STYLE_SKILL / 提示词点名 / nuwa 现蒸）
-3 质检门禁                  stop-slop Quick Checks + 五维评分，<35/50 打回
+3 质检门禁                  de-ai-metrics 机械量化（≥55）与 stop-slop 五维（≥35/50）双道门禁，单项不过打回
 4 交付                      全文 + 修改点摘要 + 评分表 + 残余风险
 ```
 
@@ -74,7 +74,7 @@ npx skills add Chendestiny/deai-skills
         ↓ push
 GitHub Chendestiny/deai-skills（分发入口）
         ↓ install.ps1 / install.sh
-~/.agents/skills/deai + 子技能（运行态，agent 加载）
+~/.agents/skills/de-ai + 子技能（运行态，agent 加载）
 ```
 
 改完本地验证：`powershell -ExecutionPolicy Bypass -File .\install.ps1`（就地升级，旧版自动备份）。

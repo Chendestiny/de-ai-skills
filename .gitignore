@@ -6,8 +6,12 @@ article/
 *.log
 .tmp-*
 temp/
+__pycache__/
+*.pyc
 
-# ===== 本机个人操作 =====
+# ===== 本机个人操作（不入库） =====
+# local/ 是个人层：chendestiny-deai-methodology/（去AI味工序标准 + 案例回放 + 参考路径清单）
+# 含私有稿件路径与个人语料，只靠直接传文件外发，不随仓库分发
 local/
 
 # ===== OS =====

@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-skills/main/instal
 
 ## What it is
 
-`deai` is a router/combinator. It never rewrites a word itself; it routes by language and task, then orchestrates:
+`de-ai` is a router/combinator. It never rewrites a word itself; it routes by language and task, then orchestrates:
 
 0. **Prevent (optional)**: optimize the draft prompt first (de-ai-prompt-enhancer), feed real material
 1. **Mark**: flag AI patterns per the main skill's checklist

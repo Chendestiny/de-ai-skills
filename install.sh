@@ -90,19 +90,19 @@ else
   echo 'need jq or python3 to parse registry.json' >&2; exit 1
 fi
 
-echo "${mode}[2/4] Router skill 'deai' ..."
+echo "${mode}[2/4] Router skill 'de-ai' ..."
 router_dest=""
 for root in "${roots[@]:-$AGENTS_ROOT}"; do
-  [ -f "$root/deai/SKILL.md" ] && { router_dest="$root/deai"; break; }
+  [ -f "$root/de-ai/SKILL.md" ] && { router_dest="$root/de-ai"; break; }
 done
-[ -z "$router_dest" ] && router_dest="$AGENTS_ROOT/deai"
+[ -z "$router_dest" ] && router_dest="$AGENTS_ROOT/de-ai"
 if [ $CHECK_ONLY -eq 1 ]; then
   echo "      would install/upgrade router at: $router_dest"
 else
   mkdir -p "$(dirname "$router_dest")"
   backup_and_clear "$router_dest"
   mkdir -p "$router_dest"
-  for item in SKILL.md AGENTS.md README.md registry.json install.ps1 install.sh LICENSE; do
+  for item in SKILL.md AGENTS.md README.md registry.json install.ps1 install.sh LICENSE scripts; do
     [ -e "$src_root/$item" ] && cp -R "$src_root/$item" "$router_dest/"
   done
   echo "      router installed: $router_dest"

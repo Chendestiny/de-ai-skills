@@ -1,14 +1,14 @@
 ---
-name: deai
-version: 1.0.0
-display_name: 去AI味总入口（deai）
-display_name_en: De-AI Router
-description_zh: 对任意 Agent 说一句"去AI味"，自动跑完标记、一次重写（文风注入）、stop-slop 质检评分的完整流水线，35/50 分以下自动打回重改。一行命令安装，内置 MIT 核心包兜底，子技能按 registry.json 自动补齐。
-description_en: The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, independent QA score gate below 35/50), one-line install with bundled MIT core fallback, sub-skills fetched per registry.
-description: 去AI味总入口（路由与组合器）。当用户说"给XX文章去AI味 / 去AI痕迹 / 人性化改写 / 这文章太AI了 / 没人味 / 不像人写的 / humanize / de-AI / remove AI flavor"时必须先加载本技能。它判定语言与任务并路由子技能（中文→humanizer-zh，英文→humanizer，UI→taste-skill），文风插槽（DEAI_STYLE_SKILL 环境变量 / 提示词点名 / nuwa-skill 现蒸）注入作者样本，stop-slop 做质检评分门禁，子技能缺失按 registry.json 引导安装。 The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, QA score), one-line install with bundled core fallback.
+name: de-ai
+version: 1.1.0
+display_name: DE-AI 去AI味总入口（de-ai）
+display_name_en: DE-AI Router
+description_zh: 对任意 Agent 说一句"去AI味"，自动跑完标记、一次重写（文风注入）、双道门禁（de-ai-metrics 机械量化与 stop-slop 五维评分）的完整流水线，机械分低于 55 或五维低于 35/50 自动打回重改。一行命令安装，内置 MIT 核心包兜底，子技能按 registry.json 自动补齐。
+description_en: The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, dual QA gate of deterministic de-ai-metrics scoring and stop-slop five-dimension review), one-line install with bundled MIT core fallback, sub-skills fetched per registry.
+description: 去AI味总入口（路由与组合器）。当用户说"给XX文章去AI味 / 去AI痕迹 / 人性化改写 / 这文章太AI了 / 没人味 / 不像人写的 / humanize / de-AI / remove AI flavor"时必须先加载本技能。它判定语言与任务并路由子技能（中文→humanizer-zh，英文→humanizer，UI→taste-skill），文风插槽（DEAI_STYLE_SKILL 环境变量 / 提示词点名 / nuwa-skill 现蒸）注入作者样本，质检为 de-ai-metrics 机械量化与 stop-slop 双道门禁，子技能缺失按 registry.json 引导安装。 The de-AI router for any agent — one trigger phrase runs the full pipeline (mark, rewrite with personal style slot, QA score), one-line install with bundled core fallback.
 ---
 
-# deai: 去AI味总入口
+# de-ai: DE-AI 去AI味总入口
 
 本技能不直接改写文字。它负责子技能自检、路由判定、冲突裁决、流水线编排和输出格式。实际改写规则全部在子技能里。
 
@@ -59,6 +59,14 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-ski
 
 判定依据是文章主要语言，不是用户提问用的语言。
 
+**场景轴（体裁，与语言路由正交）——决定 metrics 档案与写作侧豁免：**
+
+| 体裁 | metrics 档案 | 写作侧调整 |
+|---|---|---|
+| 文章/博客/汇报（默认） | generic | 无 |
+| 小说/网文对话 | novel | 对话引号内破折号与感叹号豁免；对话语气不得清空 |
+| 带货/营销文案 | ecommerce | 广告法极限词重罚替换；宣传腔不豁免 |
+
 **文风插槽（作者样本的通用约定，不绑定任何具体技能名）**——按优先级取第一个命中的：
 
 1. 环境变量 `DEAI_STYLE_SKILL` 点名的技能：用户自己蒸馏或自写的个人文风技能，装在任意技能目录
@@ -73,7 +81,7 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-ski
 0. **源头（可选，动笔前）**：提示词先过 de-ai-prompt-enhancer；同时要求用户喂真实素材（数字、案例、出处）。空心稿靠后端工序救不回来
 1. **标记**：通读原文，按主技能的模式清单逐项标出 AI 痕迹（不急着逐句改）。检测类子技能（如未来就位的 chatgpt-comparison-detection）只做定位参考，不当判据
 2. **一次重写**：主技能按处理流程整段重写，围绕段落主旨重述，而不是对标记过的短语逐个打补丁。文风插槽若命中（见第二步），作为"作者样本"注入本次重写——规则与文风同一刀，避免两个改写器串行互相拆台
-3. **质检门禁**：stop-slop 的 Quick Checks 过一遍，再打五维评分（直接性/节奏/信任度/真实性/精炼度，各 10 分）。总分 < 35/50 → 打回第 2 步重改；35-44 → 可交付但指出残余问题
+3. **质检门禁（双道）**：先跑机械量化 `python <de-ai安装目录>/scripts/deai_metrics.py --diff 原文 改后 --profile <场景>`，读数据变化行（AI词密度/标点/句长CV/总分）；机械得分 <55 或 stop-slop 五维 <35/50 → 打回第 2 步重改。metrics 缺失（无 python 环境等）时降级为纯 stop-slop 门禁并在交付中提示。双方均过 → 交付。检测器（朱雀等）如用户坚持使用，结果只写进"残余风险"，永不进本步
 4. **交付**：按下面格式输出
 
 ## 冲突裁决（子技能规则打架时按此顺序）
@@ -88,7 +96,7 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/deai-ski
 
 1. **重写后全文**（改文件时为改动清单 + 落盘路径）
 2. **修改点摘要**：按模式归类，一行一条（如：删"此外"×3（AI高频词）；三段式改两项×2）
-3. **评分表**：五维各 /10 + 总分 /50
+3. **评分与数据**：stop-slop 五维各 /10 + 总分 /50；metrics 数据变化行（破折号 a→b、句长CV a→b、AI词密度 a→b、机械总分 a→b；metrics 不可用时注明"仅 LLM 评分"）
 4. **残余风险（可选）**：无法核实的事实、需要用户补充的信息
 
 ## 不该触发本技能的情况

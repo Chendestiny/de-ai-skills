@@ -2,7 +2,7 @@
   "version": 1,
   "project": "deai-skills",
   "router": {
-    "canonical": "deai",
+    "canonical": "de-ai",
     "source": "this-repo",
     "note": "去AI味总入口：路由与组合器，本仓库自带，随安装器部署"
   },
