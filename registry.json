@@ -25,6 +25,7 @@
       "skill_path": ".",
       "aliases": [],
       "license": "present",
+      "origin": "self",
       "optional": false,
       "bundled": true,
       "note": "中文主刀升级版：24类基座 + 中文原生套路（四字格/文言虚词/机械排比/伪深度/汇报腔）+ 场景档 + 广告法替换；本仓自有 MIT"
@@ -88,6 +89,7 @@
       "skill_path": ".",
       "aliases": [],
       "license": "present",
+      "origin": "self",
       "optional": false,
       "bundled": true,
       "note": "双道门禁的机械侧：确定性量表（词表/标点/节奏/结构/归因，diff 与批量），stop-slop 改、slop-gauge 测"

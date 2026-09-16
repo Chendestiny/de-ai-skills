@@ -42,13 +42,15 @@ npx skills add Chendestiny/de-ai-skills
 
 ## 子技能清单（registry.json 为准）
 
+子技能分两类：**拉取类**从第三方上游安装；**自研扩展**（humanizer-zh-plus、slop-gauge，registry 里 origin=self）由本账号出品、与主仓同节奏维护。
+
 | 技能 | 职责 | 上游 | 状态 |
 |---|---|---|---|
-| humanizer-zh-plus | 中文主改写·plus（24 类基座 + 中文原生套路 + 场景档 + 广告法） | [Chendestiny/humanizer-zh-plus](https://github.com/Chendestiny/humanizer-zh-plus) | 必装 |
+| humanizer-zh-plus | 中文主改写·plus（24 类基座 + 中文原生套路 + 场景档 + 广告法）｜**自研扩展** | [Chendestiny/humanizer-zh-plus](https://github.com/Chendestiny/humanizer-zh-plus) | 必装 |
 | humanizer-zh | 中文改写基座（plus 缺失时的降级位） | [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) | 必装 |
 | humanizer | 英文主改写（35 模式） | [blader/humanizer](https://github.com/blader/humanizer) | 必装 |
 | stop-slop | 质检评分门禁 | [hardikpandya/stop-slop](https://github.com/hardikpandya/stop-slop) | 必装 |
-| slop-gauge | 双道门禁机械量表（确定性量化 + diff） | [Chendestiny/slop-gauge](https://github.com/Chendestiny/slop-gauge) | 必装 |
+| slop-gauge | 双道门禁机械量表（确定性量化 + diff）｜**自研扩展** | [Chendestiny/slop-gauge](https://github.com/Chendestiny/slop-gauge) | 必装 |
 | nuwa-skill | 文风蒸馏（作者样本） | [alchaincyf/nuwa-skill](https://github.com/alchaincyf/nuwa-skill) | 可选 |
 | taste-skill | UI/前端反 slop | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | 可选（别名 design-taste-frontend 视为已装） |
 | de-ai-prompt-enhancer | 源头预防（提示词端） | [gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL](https://github.com/gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL) | 可选 |
@@ -66,7 +68,7 @@ npx skills add Chendestiny/de-ai-skills
 
 ## 许可证
 
-- 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)
+- 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)。两个自研扩展 humanizer-zh-plus、slop-gauge 同为本账号出品，均 MIT。两个自研扩展技能 humanizer-zh-plus 与 slop-gauge 均为本账号出品，同样 MIT
 - 四个核心子技能（humanizer / humanizer-zh / stop-slop / slop-gauge，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
 
 ## 开发模型

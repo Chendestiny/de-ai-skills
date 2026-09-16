@@ -37,7 +37,7 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-sk
 ```
 
 规则：
-- `registry.json` 是唯一清单（repo / skill_path / aliases / license），不凭记忆安装
+- `registry.json` 是唯一清单（repo / skill_path / aliases / license / origin），不凭记忆安装。origin=self 的两条（humanizer-zh-plus、slop-gauge）为本账号自研扩展，随主仓节奏更新
 - license 为 none 的两个子技能（de-ai-prompt-enhancer、chatgpt-comparison-detection）只允许装时从上游拉取，禁止复制进任何再分发仓库
 - status 为 deferred 的条目不安装、不路由，只留占位
 
