@@ -28,6 +28,8 @@ npx skills add Chendestiny/de-ai-skills
 
 装完对任意 agent 说 **"给这篇文章去AI味"** 即可触发。
 
+> 装完如果 agent 说"找不到 humanizer-zh-plus / slop-gauge"：跑 `.\install.ps1 -CheckOnly`（或 `bash install.sh --check`）。安装器会逐个校验落地副本的 frontmatter，`LOAD-RISK` 行点名的技能就是"文件在、agent 看不见"——通常是 SKILL.md 的 YAML 解析失败（值里有裸 `": "`）或 `name` 不是小写 kebab-case。新装/升级的副本安装器会就地 `[fix]`，用户自己的旧副本只报不改。
+
 ## 它是什么
 
 `de-ai` 是路由与组合器（总入口），自己不改一个字。它按语言和任务路由到子技能，并编排流水线：
@@ -61,15 +63,16 @@ npx skills add Chendestiny/de-ai-skills
 ## 设计原则
 
 1. **总入口保持薄**：路由、流水线、冲突裁决、安装自检，四件事，不吸改写逻辑
-2. **上游优先 + 内置兜底**：子技能装时优先从各自上游拉取；四个必装核心（humanizer-zh / humanizer / stop-slop / slop-gauge，均 MIT）以 zip 内置包随仓库分发（`vendor/*.zip`，整仓保持两级目录以通过 WorkBuddy 等平台的打包校验），上游失败时自动解压兜底。其余子技能不打包：nuwa 34MB 太重，无 LICENSE 的永不入仓
+2. **上游优先 + 内置兜底**：子技能装时优先从各自上游拉取；五个必装核心（humanizer-zh / humanizer-zh-plus / humanizer / stop-slop / slop-gauge，均 MIT）以 zip 内置包随仓库分发（`vendor/*.zip`，整仓保持两级目录以通过 WorkBuddy 等平台的打包校验），上游失败时自动解压兜底。其余子技能不打包：nuwa 34MB 太重，无 LICENSE 的永不入仓。vendor 是快照，上游或自研技能更新后用 `.\pack-vendor.ps1` 重打（`-Check` 只报哪些过期，`-Only <name>` 单打）
 3. **事实红线**：流水线全程不得新增或丢失事实、数字、日期、出处
 4. **写读分离**：改写技能不给自己打分，质检永远由 stop-slop 独立执行
 5. **作者样本优先**：nuwa 蒸馏的用户文风覆盖默认禁令（防止两个改写器互相拆台——一次重写带双参数，不串行两刀）
+6. **装上没有不算数**：agent 只认 SKILL.md 的 frontmatter，不认磁盘。安装器对每个落地副本校验（name 合法、description 在位、YAML 能解析），新拷入的能修就 `[fix]`，用户已有文件只报 `[warn]` 并列进 `LOAD-RISK`
 
 ## 许可证
 
-- 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)。两个自研扩展 humanizer-zh-plus、slop-gauge 同为本账号出品，均 MIT。两个自研扩展技能 humanizer-zh-plus 与 slop-gauge 均为本账号出品，同样 MIT
-- 四个核心子技能（humanizer / humanizer-zh / stop-slop / slop-gauge，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
+- 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)。两个自研扩展 humanizer-zh-plus、slop-gauge 同为本账号出品，均 MIT
+- 五个核心子技能（humanizer-zh / humanizer-zh-plus / humanizer / stop-slop / slop-gauge，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
 
 ## 开发模型
 
@@ -81,4 +84,4 @@ GitHub Chendestiny/de-ai-skills（分发入口）
 ~/.agents/skills/de-ai + 子技能（运行态，agent 加载）
 ```
 
-改完本地验证：`powershell -ExecutionPolicy Bypass -File .\install.ps1`（就地升级，旧版自动备份）。
+改完本地验证：`powershell -ExecutionPolicy Bypass -File .\install.ps1`（就地升级，旧版自动备份）；只看会装什么用 `-CheckOnly`。动过 humanizer-zh-plus / slop-gauge 的 SKILL.md 就要 push 后 `.\pack-vendor.ps1` 重打内置包，再连 vendor 一起提交。收尾跑一次 `.\install.ps1 -CheckOnly`，`LOAD-RISK` 为空才算装到位。

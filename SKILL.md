@@ -1,6 +1,6 @@
 ---
 name: de-ai
-version: 1.1.0
+version: 1.2.0
 display_name: DE-AI 去AI味总入口（de-ai）
 display_name_en: DE-AI Router
 description_zh: 对任意 Agent 说一句"去AI味"，自动跑完标记、一次重写（文风注入）、双道门禁（slop-gauge 机械量化与 stop-slop 五维评分）的完整流水线，机械分低于 55 或五维低于 35/50 自动打回重改。一行命令安装，内置 MIT 核心包兜底，子技能按 registry.json 自动补齐。
@@ -18,7 +18,8 @@ description: 去AI味总入口（路由与组合器）。当用户说"给XX文�
 
 | canonical | 别名也算已装 | 缺失时的降级 |
 |---|---|---|
-| humanizer-zh-plus | — | 缺则落回 humanizer-zh（旧基座仍覆盖 24 类） |
+| humanizer-zh | — | 中文 24 类基座（plus 的规则表引用它，不重复收录）；缺则中文侧没有基座，提示安装 |
+| humanizer-zh-plus | — | 缺则中文侧只跑 humanizer-zh 基座（少了中文原生套路与场景档） |
 | humanizer | — | 英文无主改写，提示安装 |
 | stop-slop | — | 无质检门禁，提示安装（写读分离是底线） |
 | slop-gauge | — | 可缺：双道门禁退为纯 stop-slop（无数据变化行），提示安装 |
@@ -40,6 +41,7 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-sk
 - `registry.json` 是唯一清单（repo / skill_path / aliases / license / origin），不凭记忆安装。origin=self 的两条（humanizer-zh-plus、slop-gauge）为本账号自研扩展，随主仓节奏更新
 - license 为 none 的两个子技能（de-ai-prompt-enhancer、chatgpt-comparison-detection）只允许装时从上游拉取，禁止复制进任何再分发仓库
 - status 为 deferred 的条目不安装、不路由，只留占位
+- **"在位"以 agent 实际能加载为准，不看目录**：目录里有 SKILL.md 但本会话技能清单里没有它 = frontmatter 不被加载器接受（YAML 解析失败 / name 不是小写 kebab-case / 缺 name 或 description），按缺失处理并提示重装——安装器会把这些情况报成 `[warn]` / `LOAD-RISK`。最常见的坑是描述里写了裸的 `": "`（ASCII 冒号加空格）破坏 YAML，值里的冒号要改用破折号或全角冒号
 
 ## 第一步：拿到文章
 
@@ -51,9 +53,9 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-sk
 
 | 任务 | 加载的子技能（用 skill 工具，按顺序） |
 |---|---|
-| 中文文章/文案/博客/公众号 | 1) `humanizer-zh-plus`（主改写，缺则 humanizer-zh）2) `stop-slop`（质检）＋ 文风插槽（见下） |
+| 中文文章/文案/博客/公众号 | 1) `humanizer-zh`（24 类基座）+ `humanizer-zh-plus`（中文原生增量）——plus 只写 25-33 与场景纪律，基座规则不在它体内，两个都得载；plus 缺则只跑 humanizer-zh 2) `stop-slop`（质检）＋ 文风插槽（见下） |
 | 英文文章/prose/docs | 1) `humanizer`（主改写） 2) `stop-slop`（质检）；文风同理 |
-| 中英混合文章 | 两边主技能都加载，按段落语言分段套用 |
+| 中英混合文章 | 两边主技能都加载（中文侧含基座+plus），按段落语言分段套用 |
 | 网页/落地页/UI"去AI味" | `taste-skill`（本地可能叫 design-taste-frontend，同一个） |
 | 还没动笔，要生成初稿 | `de-ai-prompt-enhancer` 先过提示词（源头预防） |
 | 代码注释/commit message | `humanizer`（其 Embedded mode：只返回最终文本） |
@@ -82,7 +84,12 @@ Unix:          curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-sk
 0. **源头（可选，动笔前）**：提示词先过 de-ai-prompt-enhancer；同时要求用户喂真实素材（数字、案例、出处）。空心稿靠后端工序救不回来
 1. **标记**：通读原文，按主技能的模式清单逐项标出 AI 痕迹（不急着逐句改）。检测类子技能（如未来就位的 chatgpt-comparison-detection）只做定位参考，不当判据
 2. **一次重写**：主技能按处理流程整段重写，围绕段落主旨重述，而不是对标记过的短语逐个打补丁。文风插槽若命中（见第二步），作为"作者样本"注入本次重写——规则与文风同一刀，避免两个改写器串行互相拆台
-3. **质检门禁（双道）**：先跑机械量化 `python ~/.agents/skills/slop-gauge/scripts/slop_gauge.py --diff 原文 改后 --profile <场景>`，读数据变化行（AI词密度/标点/句长CV/总分）；机械得分 <55 或 stop-slop 五维 <35/50 → 打回第 2 步重改。metrics 缺失（无 python 环境等）时降级为纯 stop-slop 门禁并在交付中提示。双方均过 → 交付。检测器（朱雀等）如用户坚持使用，结果只写进"残余风险"，永不进本步
+3. **质检门禁（双道）**：先跑机械量化，读数据变化行（AI词密度/标点/句长CV/总分）。脚本按安装目录的**绝对路径**调用——`~` 在 Windows/PowerShell 下不展开，写成 `~/...` 会让 python 报 "can't open file"：
+   - PowerShell：`python "$env:USERPROFILE\.agents\skills\slop-gauge\scripts\slop_gauge.py" --diff 原文.md 改后.md --profile generic`
+   - bash/zsh：`python ~/.agents/skills/slop-gauge/scripts/slop_gauge.py --diff 原文.md 改后.md --profile generic`
+   - 子技能装在别处（`~/.dsh/skills/...` 或 `-Source` 指定目录）时以实际路径为准；先 `--help` 确认脚本跑得通
+
+   机械得分 <55 或 stop-slop 五维 <35/50 → 打回第 2 步重改。metrics 缺失（无 python 环境等）时降级为纯 stop-slop 门禁并在交付中提示。双方均过 → 交付。检测器（朱雀等）如用户坚持使用，结果只写进"残余风险"，永不进本步
 4. **交付**：按下面格式输出
 
 ## 冲突裁决（子技能规则打架时按此顺序）

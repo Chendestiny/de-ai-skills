@@ -8,11 +8,14 @@
 #   Mirror prefix (optional, prepended to the GitHub download URL):
 #            $env:DEAI_GH_PREFIX = 'https://ghfast.top/'
 # Effects:
-#   1. Router skill 'deai' lands in a cross-agent skills dir (%USERPROFILE%\.agents\skills\deai),
+#   1. Router skill 'de-ai' lands in a cross-agent skills dir (%USERPROFILE%\.agents\skills\de-ai),
 #      upgraded in place if it already exists there (old copy backed up, newest 2 kept)
 #   2. Sub-skills listed in registry.json are fetched from their upstream repos at install
-#      time (three MIT cores bundled under vendor/ as fallback). Skills already present (canonical or alias) are skipped.
+#      time (MIT core packages bundled under vendor/ as fallback). Skills already present (canonical or alias) are skipped.
 #   3. Deferred / null-path entries are reported but not installed.
+#   4. Every landed skill is validated against what agent skill loaders require (frontmatter
+#      name == install dir name, kebab-case, description present); mismatched names are fixed,
+#      other problems are reported as LOAD-RISK because the agent would silently not see the skill.
 # NOTE: keep this file ASCII-only and BOM-less. It must survive `irm | iex` on both
 #       PowerShell 5.1 and PowerShell 7. Chinese docs live in README.md / SKILL.md / AGENTS.md.
 param(
@@ -27,6 +30,7 @@ $agentsRoot = Join-Path $HOME '.agents\skills'
 $dshRoot    = Join-Path $HOME '.dsh\skills'
 $roots = @($agentsRoot, $dshRoot) | Where-Object { Test-Path $_ }
 if (-not $roots) { $roots = @($agentsRoot) }
+$script:loadRisk = @()
 
 function Find-SkillDir([string]$Name, [string[]]$Aliases) {
     foreach ($root in $roots) {
@@ -51,6 +55,73 @@ function Backup-AndClear([string]$Dest) {
     $baks = @(Get-ChildItem -LiteralPath (Split-Path $Dest -Parent) -Filter ((Split-Path $Dest -Leaf) + '.bak-*') -Directory -ErrorAction SilentlyContinue | Sort-Object Name)
     if ($baks.Count -gt $keep) {
         $baks | Select-Object -First ($baks.Count - $keep) | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force; Write-Host "      removed old backup: $($_.Name)" }
+    }
+}
+
+# Agent skill loaders key a skill by the frontmatter name in SKILL.md and parse that
+# block as YAML. A name that is not lowercase kebab-case, a missing name/description, or
+# a bare "colon+space" inside an unquoted value makes the loader skip the file silently:
+# installed, yet invisible to the agent. On copies we just placed we fix what is safely
+# fixable (rewrite the name, quote the value); a skill that was already installed is only
+# reported, since it is the user's copy.
+function Repair-SkillManifest([string]$Dir, [string]$Canonical, [switch]$ReadOnly) {
+    if (-not (Test-Path -LiteralPath $Dir)) { return }
+    $p = Join-Path $Dir 'SKILL.md'
+    if (-not (Test-Path -LiteralPath $p)) {
+        Write-Host "      [warn]   $Canonical SKILL.md missing after copy"
+        $script:loadRisk += $Canonical; return
+    }
+    $raw = [System.IO.File]::ReadAllText($p)
+    $m = [regex]::Match($raw, '(?s)\A---\r?\n(.*?)\r?\n---')
+    if (-not $m.Success) {
+        Write-Host "      [warn]   $Canonical has no YAML frontmatter; strict agent loaders will skip it"
+        $script:loadRisk += $Canonical; return
+    }
+    $fm = $m.Groups[1].Value
+    $fmStart = $m.Groups[1].Index; $fmLen = $m.Groups[1].Length
+    $nl = if ($raw.IndexOf("`r`n") -ge 0) { "`r`n" } else { "`n" }
+    $lines = @($fm -split "\r?\n")
+    $hasName = $false; $hasDesc = $false; $fixed = $false; $oldName = ''
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line -match '^name:[ \t]*(.*)$') {
+            $hasName = $true
+            $v = $Matches[1].Trim().Trim([char]34, [char]39).Trim()
+            if ($v -cnotmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
+                if ($ReadOnly) {
+                    Write-Host "      [warn]   $Canonical has invalid skill name '$v'; agents cannot load it (reinstall it)"
+                    $script:loadRisk += $Canonical
+                } else {
+                    $lines[$i] = "name: $Canonical"; $fixed = $true; $oldName = $v
+                }
+            } elseif ($v -cne $Canonical) {
+                Write-Host "      [note]   $Canonical is visible to agents as '$v' (frontmatter name != dir name); registry aliases must list it"
+            }
+            continue
+        }
+        if ($line -match '^description:[ \t]*\S') { $hasDesc = $true }
+        if ($line -match '^([A-Za-z0-9_-]+):[ \t]+(.*)$') {
+            $key = $Matches[1]; $v = $Matches[2]
+            $c = if ($v.Length -gt 0) { $v.Substring(0, 1) } else { '' }
+            $plain = $c -ne '"' -and $c -ne "'" -and $c -ne '>' -and $c -ne '|' -and $c -ne '[' -and $c -ne '&' -and $c -ne '*'
+            if ($plain -and $v.Contains(': ')) {
+                if ($ReadOnly) {
+                    Write-Host "      [warn]   $Canonical frontmatter '$key' holds an unquoted colon; some agents fail to parse that YAML"
+                    $script:loadRisk += $Canonical
+                } else {
+                    $esc = $v.Replace('\', '\\').Replace('"', '\"')
+                    $lines[$i] = "$($key): `"$esc`""; $fixed = $true
+                    Write-Host "      [fix]    $Canonical quoted frontmatter '$key' (bare colon breaks YAML)"
+                }
+            }
+        }
+    }
+    if (-not $hasName) { Write-Host "      [warn]   $Canonical frontmatter has no name; strict agent loaders will skip it"; $script:loadRisk += $Canonical }
+    if (-not $hasDesc) { Write-Host "      [warn]   $Canonical frontmatter has no description; strict agent loaders will skip it"; $script:loadRisk += $Canonical }
+    if ($fixed) {
+        $newRaw = $raw.Substring(0, $fmStart) + ($lines -join $nl) + $raw.Substring($fmStart + $fmLen)
+        [System.IO.File]::WriteAllText($p, $newRaw, (New-Object System.Text.UTF8Encoding($false)))
+        if ($oldName) { Write-Host "      [fix]    $Canonical frontmatter name was '$oldName' (not a valid skill name); rewritten to the dir name" }
     }
 }
 
@@ -114,7 +185,7 @@ foreach ($root in $roots) {
     if (Test-Path (Join-Path $p 'SKILL.md')) { $routerDest = $p; break }
 }
 if (-not $routerDest) { $routerDest = Join-Path $agentsRoot 'de-ai' }
-$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'registry.json', 'install.ps1', 'install.sh', 'LICENSE'
+$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'README_EN.md', 'registry.json', 'install.ps1', 'install.sh', 'pack-vendor.ps1', 'LICENSE'
 if ($CheckOnly) {
     Write-Host ("      would {0} router at: {1}" -f (@{ $true = 'upgrade' }[$routerDest -ne $null] -replace '^$', 'install'), $routerDest)
 } else {
@@ -124,6 +195,7 @@ if ($CheckOnly) {
         $p = Join-Path $srcRoot $item
         if (Test-Path $p) { Copy-Item $p $routerDest -Recurse -Force }
     }
+    Repair-SkillManifest $routerDest 'de-ai'
     Write-Host "      router installed: $routerDest"
 }
 
@@ -141,6 +213,7 @@ foreach ($s in $registry.skills) {
     if ($existing) {
         $skipped += $name
         Write-Host "      [skip]   $name already present: $existing"
+        Repair-SkillManifest $existing (Split-Path $existing -Leaf) -ReadOnly
         continue
     }
     # offline cache: env DEAI_OFFLINE_DIR (your local repo downloads) or <srcRoot>\offline.
@@ -163,6 +236,7 @@ foreach ($s in $registry.skills) {
             $dest = Join-Path $agentsRoot $name
             Backup-AndClear $dest
             Copy-Item $offlineHit $dest -Recurse -Force
+            Repair-SkillManifest $dest $name
             $installed += $name
             Write-Host "      [install] $name <- offline cache ($offlineHit)"
         }
@@ -186,6 +260,7 @@ foreach ($s in $registry.skills) {
         $dest = Join-Path $agentsRoot $name
         Backup-AndClear $dest
         Copy-Item $skillSrc $dest -Recurse -Force
+        Repair-SkillManifest $dest $name
         $installed += $name
         Write-Host "      [install] $name -> $dest"
         Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -198,6 +273,7 @@ foreach ($s in $registry.skills) {
             Backup-AndClear $dest
             New-Item -ItemType Directory -Path $dest -Force | Out-Null
             Expand-Archive -Path $vendorZip -DestinationPath $dest -Force
+            Repair-SkillManifest $dest $name
             $installed += $name
             Write-Host "      [install] $name <- repo bundle zip (upstream failed: $($_.Exception.Message))"
         } else {
@@ -214,4 +290,6 @@ Write-Host ("      installed : {0}" -f $(if ($installed) { $installed -join ', '
 Write-Host ("      present   : {0}" -f $(if ($skipped) { $skipped -join ', ' } else { '(none)' }))
 Write-Host ("      deferred  : {0}" -f $(if ($deferred) { $deferred -join ', ' } else { '(none)' }))
 if ($failed) { Write-Host ("      FAILED    : {0}  (check repo url / branch / network)" -f ($failed -join ', ')) }
+$risk = @($script:loadRisk | Select-Object -Unique)
+if ($risk.Count) { Write-Host ("      LOAD-RISK : {0}  (installed, but the agent may not list it - see the [warn] lines above)" -f ($risk -join ', ')) }
 if (-not $CheckOnly) { Write-Host '      done. say "de-AI this article" (or Chinese) to any agent to start.' }

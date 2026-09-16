@@ -61,13 +61,79 @@ vendor_fallback() { # name reason -> 0 if installed from repo bundle zip
   mkdir -p "$AGENTS_ROOT/$name"
   if command -v unzip >/dev/null 2>&1; then unzip -q -o "$src_root/vendor/$name.zip" -d "$AGENTS_ROOT/$name"
   else python3 -c "import sys,zipfile;zipfile.ZipFile('$src_root/vendor/$name.zip').extractall('$AGENTS_ROOT/$name')"; fi
+  validate_skill_manifest "$AGENTS_ROOT/$name" "$name" fix
   installed="$installed $name"
   echo "      [install] $name <- repo bundle zip (upstream failed: $reason)"
   return 0
 }
 
-mode=""; [ $CHECK_ONLY -eq 1 ] && mode='[CHECK-ONLY] '
+# validate_skill_manifest <skill_dir> <canonical> <fix|check>
+# Agent loaders key a skill by the SKILL.md frontmatter name and parse that block as YAML,
+# so an invalid name, a missing name/description, or a bare "colon+space" inside an
+# unquoted value makes the skill invisible even though the files are on disk. In "fix" mode
+# (copies we just placed) we repair the name and quote the offending value; in "check" mode
+# (a skill that was already installed, i.e. the user's copy) we only report.
+validate_skill_manifest() {
+  local dir="$1" canonical="$2" mode="${3:-fix}" tmp st
+  local p="$dir/SKILL.md"
+  [ -d "$dir" ] || return 0
+  if [ ! -f "$p" ]; then
+    echo "      [warn]   $canonical SKILL.md missing"; unloadable="$unloadable $canonical"; return 0
+  fi
+  if [ "$(head -n 1 "$p")" != "---" ]; then
+    echo "      [warn]   $canonical has no YAML frontmatter; strict agent loaders will skip it"
+    unloadable="$unloadable $canonical"; return 0
+  fi
+  tmp="$(mktemp)"; st="$(mktemp)"
+  awk -v want="$canonical" -v mode="$mode" -v stfile="$st" -v sq="'" '
+    function trimq(s) { gsub(/^[ \t\r]+|[ \t\r]+$/, "", s); gsub("^[" sq "]", "", s); gsub("[" sq "]$", "", s); return s }
+    BEGIN { infm = 1 }
+    NR == 1 { print; next }
+    infm == 1 && $0 == "---" { infm = 2; print; next }
+    infm == 2 { print; next }
+    infm == 1 {
+      if ($0 ~ /^name:[ \t]/) {
+        v = $0; sub(/^name:[ \t]*/, "", v); v = trimq(v); print "MSG\thasname" > stfile
+        bad = (v !~ /^[a-z0-9]+(-[a-z0-9]+)*$/)
+        if (bad && mode == "fix") { print "name: " want; fixed = 1; print "MSG\tnamefix\t" v > stfile }
+        else { print; if (bad) print "MSG\tbadname" > stfile; else if (v != want) print "MSG\talias\t" v > stfile }
+        next
+      }
+      key = ""; v = ""
+      if ($0 ~ /^[A-Za-z0-9_-]+:[ \t]*[^ \t]/) { key = $0; sub(/:.*$/, "", key); v = $0; sub(/^[A-Za-z0-9_-]+:[ \t]*/, "", v) }
+      if ($0 ~ /^description:[ \t]*[^ \t]/) print "MSG\thasdesc" > stfile
+      c = substr(v, 1, 1)
+      bad = (v != "" && index(v, ": ") > 0 && c != "\"" && c != sq && c != ">" && c != "|" && c != "[" && c != "&" && c != "*")
+      if (bad && mode == "fix") {
+        esc = v; gsub(/"/, "\\\"", esc); print key ": \"" esc "\""; fixed = 1; print "MSG\tquoted\t" key > stfile
+      } else { print; if (bad) print "MSG\tcolon" > stfile }
+      next
+    }
+    END { if (fixed) print "MSG\tfixed" > stfile }
+  ' "$p" > "$tmp"
+  local fixed=0 hasname=0 hasdesc=0
+  while IFS=$'\t' read -r _ tag arg; do
+    case "$tag" in
+      hasname) hasname=1 ;;
+      hasdesc) hasdesc=1 ;;
+      namefix) echo "      [fix]    $canonical frontmatter name was '$arg' (not a valid skill name); rewritten to the dir name" ;;
+      quoted)  echo "      [fix]    $canonical quoted frontmatter key '$arg' (a bare colon inside the value breaks YAML)" ;;
+      fixed)   fixed=1 ;;
+      badname) echo "      [warn]   $canonical has an invalid skill name; agents cannot load it (reinstall it)"; unloadable="$unloadable $canonical" ;;
+      alias)   echo "      [note]   $canonical is visible to agents as '$arg' (frontmatter name != dir name); registry aliases must list it" ;;
+      colon)   echo "      [warn]   $canonical frontmatter value holds an unquoted colon; some agents fail to parse that YAML"; unloadable="$unloadable $canonical" ;;
+    esac
+  done < "$st"
+  [ "$hasname" = "1" ] || { echo "      [warn]   $canonical frontmatter has no name; strict agent loaders will skip it"; unloadable="$unloadable $canonical"; }
+  [ "$hasdesc" = "1" ] || { echo "      [warn]   $canonical frontmatter has no description; strict agent loaders will skip it"; unloadable="$unloadable $canonical"; }
+  rm -f "$st"
+  if [ "$fixed" = "1" ]; then mv "$tmp" "$p"; else rm -f "$tmp"; fi
+  return 0
+}
 
+unloadable=""
+
+mode=""; [ $CHECK_ONLY -eq 1 ] && mode='[CHECK-ONLY] '
 echo "${mode}[1/4] Locate de-ai-skills source ..."
 src_root=""
 if [ -f "$(dirname "$0")/registry.json" ]; then
@@ -78,16 +144,32 @@ else
 fi
 echo "      source: $src_root"
 
-# parse registry: need jq or python3
+# parse registry: need jq or a *working* python (the Windows "python3" App Execution Alias
+# resolves but prints nothing, which used to make this installer silently install nothing)
+py=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c 'import json,sys' >/dev/null 2>&1; then py="$cand"; break; fi
+done
 if command -v jq >/dev/null 2>&1; then
   read_registry() { jq -r '.skills[] | [.canonical, .repo, (.skill_path // "null"), ((.aliases // []) | join(",")), (.status // "")] | @tsv' "$src_root/registry.json"; }
-elif command -v python3 >/dev/null 2>&1; then
-  read_registry() { python3 -c "
-import json
-for s in json.load(open('$src_root/registry.json', encoding='utf-8'))['skills']:
-    print('\t'.join([s['canonical'], s['repo'], s.get('skill_path') or 'null', ','.join(s.get('aliases') or []), s.get('status','')]))"; }
+  parser='jq'
+elif [ -n "$py" ]; then
+  read_registry() { "$py" - "$src_root/registry.json" <<'PY'
+import json, sys
+for s in json.load(open(sys.argv[1], encoding='utf-8'))['skills']:
+    print('\t'.join([s['canonical'], s['repo'], s.get('skill_path') or 'null', ','.join(s.get('aliases') or []), s.get('status', '')]))
+PY
+}
+  parser="$py"
 else
-  echo 'need jq or python3 to parse registry.json' >&2; exit 1
+  echo 'need jq or a working python3/python to parse registry.json' >&2; exit 1
+fi
+echo "      registry parser: $parser"
+reg_tsv="$(mktemp)"
+read_registry | tr -d '\r' > "$reg_tsv" || true
+if [ ! -s "$reg_tsv" ]; then
+  echo "      FAILED: registry.json parsed to zero entries (parser=$parser) - nothing was installed" >&2
+  rm -f "$reg_tsv"; exit 1
 fi
 
 echo "${mode}[2/4] Router skill 'de-ai' ..."
@@ -102,9 +184,10 @@ else
   mkdir -p "$(dirname "$router_dest")"
   backup_and_clear "$router_dest"
   mkdir -p "$router_dest"
-  for item in SKILL.md AGENTS.md README.md registry.json install.ps1 install.sh LICENSE; do do
+  for item in SKILL.md AGENTS.md README.md README_EN.md registry.json install.ps1 install.sh pack-vendor.ps1 LICENSE; do
     [ -e "$src_root/$item" ] && cp -R "$src_root/$item" "$router_dest/"
   done
+  validate_skill_manifest "$router_dest" de-ai fix
   echo "      router installed: $router_dest"
 fi
 
@@ -116,7 +199,9 @@ while IFS=$'\t' read -r name repo path aliases status; do
     deferred="$deferred $name"; echo "      [defer] $name (no skill package yet)"; continue
   fi
   if found="$(find_skill_dir "$name" ${aliases:+${aliases//,/ }})"; then
-    skipped="$skipped $name"; echo "      [skip]   $name already present: $found"; continue
+    skipped="$skipped $name"; echo "      [skip]   $name already present: $found"
+    validate_skill_manifest "$found" "$(basename "$found")" check
+    continue
   fi
   # offline cache: env DEAI_OFFLINE_DIR (local repo downloads) or <src_root>/offline.
   # Tolerant match: <canonical> or <canonical>-main, case-insensitive, must contain SKILL.md.
@@ -136,6 +221,7 @@ while IFS=$'\t' read -r name repo path aliases status; do
       mkdir -p "$AGENTS_ROOT"
       backup_and_clear "$AGENTS_ROOT/$name"
       cp -R "$local_cache" "$AGENTS_ROOT/$name"
+      validate_skill_manifest "$AGENTS_ROOT/$name" "$name" fix
       installed="$installed $name"; echo "      [install] $name <- offline cache ($local_cache)"
     fi
     continue
@@ -158,6 +244,7 @@ while IFS=$'\t' read -r name repo path aliases status; do
       mkdir -p "$AGENTS_ROOT"
       backup_and_clear "$AGENTS_ROOT/$name"
       cp -R "$skill_src" "$AGENTS_ROOT/$name"
+      validate_skill_manifest "$AGENTS_ROOT/$name" "$name" fix
       installed="$installed $name"; echo "      [install] $name -> $AGENTS_ROOT/$name"
     else
       vendor_fallback "$name" "SKILL.md not found inside repo" || failed="$failed $name"
@@ -166,12 +253,14 @@ while IFS=$'\t' read -r name repo path aliases status; do
     vendor_fallback "$name" "download failed" || failed="$failed $name"
   fi
   rm -rf "$work"
-done < <(read_registry)
+done < "$reg_tsv"
+rm -f "$reg_tsv"
 
 echo "${mode}[4/4] Summary"
 echo "      router    : $([ $CHECK_ONLY -eq 1 ] && echo 'check-only, no write' || echo "ok -> $router_dest")"
 echo "      installed :${installed:- (none)}"
-echo "      present  :${skipped:- (none)}"
-echo "      deferred :${deferred:- (none)}"
-[ -n "$failed" ] && echo "      FAILED   :$failed  (check repo url / branch / network)"
+echo "      present   :${skipped:- (none)}"
+echo "      deferred  :${deferred:- (none)}"
+[ -n "$failed" ] && echo "      FAILED    :$failed  (check repo url / branch / network)"
+[ -n "$unloadable" ] && echo "      LOAD-RISK :$unloadable  (installed but the agent may not see it - fix SKILL.md frontmatter upstream)"
 exit 0

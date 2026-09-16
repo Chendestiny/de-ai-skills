@@ -22,22 +22,26 @@ curl -fsSL https://raw.githubusercontent.com/Chendestiny/de-ai-skills/main/insta
 0. **Prevent (optional)**: optimize the draft prompt first (de-ai-prompt-enhancer), feed real material
 1. **Mark**: flag AI patterns per the main skill's checklist
 2. **One rewrite**: main skill rewrites in full, with a nuwa-distilled style profile injected as the "author sample" (one pass, both parameters — never two sequential rewriters fighting each other)
-3. **QA gate**: stop-slop quick checks + 5-dimension score; below 35/50 goes back to step 2
+3. **QA gate (two arms)**: slop-gauge deterministic diff (AI-loanword density, punctuation, sentence-length CV; below 55 goes back) plus stop-slop quick checks and 5-dimension score (below 35/50 goes back)
 4. **Deliver**: full text + change summary + scorecard + residual risks
 
 ## Sub-skills (registry.json is the source of truth)
 
+Two of them are ours: humanizer-zh-plus and slop-gauge (`origin: self` in registry.json, MIT, same account, same cadence as this router).
+
 | Skill | Role | Upstream | Status |
 |---|---|---|---|
-| humanizer-zh | Chinese rewrite (24 patterns) | op7418/Humanizer-zh | required |
+| humanizer-zh-plus | Chinese rewrite, the 24 base patterns plus Chinese-native tells, writing profiles and ad-law substitution | Chendestiny/humanizer-zh-plus | required (self) |
+| humanizer-zh | Chinese rewrite base (fallback when plus is absent) | op7418/Humanizer-zh | required |
 | humanizer | English rewrite (35 patterns) | blader/humanizer | required |
-| stop-slop | QA scoring gate | hardikpandya/stop-slop | required |
+| stop-slop | QA scoring gate (LLM read) | hardikpandya/stop-slop | required |
+| slop-gauge | QA scoring gate (deterministic meter, diff mode) | Chendestiny/slop-gauge | required (self) |
 | nuwa-skill | style distillation | alchaincyf/nuwa-skill | optional |
 | taste-skill | anti-slop frontend/UI | Leonxlnx/taste-skill | optional (alias design-taste-frontend counts as installed) |
 | de-ai-prompt-enhancer | input-side prevention | gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL | optional |
 | chatgpt-comparison-detection | pre-scan reference | Hello-SimpleAI/chatgpt-comparison-detection | deferred (upstream is an academic code repo, no SKILL.md) |
 
-The installer skips what you already have (canonical or alias), fetches what is missing straight from upstream, and only reports deferred entries.
+The installer skips what you already have (canonical or alias), fetches what is missing straight from upstream, and only reports deferred entries. Every copy it lands is then checked the way an agent loader checks it: the frontmatter must parse as YAML, carry a `description`, and name the skill in lowercase kebab-case matching its directory. Copies we just placed get repaired (`[fix]`); your own pre-existing files are only reported (`[warn]`, summarized as `LOAD-RISK`) — a skill that fails this is on disk but invisible to the agent, which is exactly what `install.ps1 -CheckOnly` is for.
 
 ## License
 
