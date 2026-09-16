@@ -13,10 +13,10 @@
 #
 # Usage:
 #   .\pack-vendor.ps1                      # refresh all bundled entries from GitHub
-#   .\pack-vendor.ps1 -Only slop-gauge     # refresh one
+#   .\pack-vendor.ps1 -Only slop-gauge     # refresh one (comma-separated list also works)
 #   .\pack-vendor.ps1 -Check               # report which zips differ from GitHub, write nothing
 param(
-    [string[]]$Only,
+    [string]$Only,
     [switch]$Check
 )
 $ErrorActionPreference = 'Stop'
@@ -50,13 +50,17 @@ function Get-TreeHash([string]$Dir) {
     foreach ($f in $items) {
         [void]$sb.AppendLine($f.FullName.Substring($Dir.Length) + '|' + (Get-FileHash $f.FullName -Algorithm SHA1).Hash)
     }
-    return (Get-FileHash -InputStream ([System.IO.MemoryStream]::new([System.Text.Encoding]::UTF8.GetBytes($sb.ToString()))) -Algorithm SHA2).Hash
+    return (Get-FileHash -InputStream ([System.IO.MemoryStream]::new([System.Text.Encoding]::UTF8.GetBytes($sb.ToString()))) -Algorithm SHA256).Hash
 }
+
+# -File passes a comma list as one string, so split it here instead of trusting [string[]]
+$onlyList = @()
+if ($Only) { $onlyList = @($Only -split '[,;\s]+' | Where-Object { $_ }) }
 
 foreach ($s in $registry.skills) {
     $name = $s.canonical
     if (-not $s.bundled) { continue }
-    if ($Only -and $Only -notcontains $name) { continue }
+    if ($onlyList.Count -and ($onlyList -notcontains $name)) { continue }
     if ($s.license -eq 'none') { Write-Host "      [skip]   $name has license=none - never bundle it"; continue }
     $tmp = Join-Path $env:TEMP ('deaivendor-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $tmp -Force | Out-Null
