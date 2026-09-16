@@ -14,7 +14,7 @@
 1. **自检**：按 SKILL.md 第零步的表核对子技能是否在位（同时查 canonical 和 aliases 目录）。缺失且必装 → 跑安装器；可选缺失 → 降级并告知用户
 2. **拿文章**：文本直接用；路径用 read / read_document；只有意图没内容 → 只问一个问题要文章，不编
 3. **路由**：按语言/任务选主技能（中文 humanizer-zh，英文 humanizer，UI 走 taste-skill，动笔前走 de-ai-prompt-enhancer）
-4. **跑流水线**：标记 → 一次重写（文风档案作作者样本）→ de-ai-metrics `--diff` 出数据变化行 → stop-slop 质检 → 交付（双道门禁：机械 <55 或 stop-slop <35 → 打回）
+4. **跑流水线**：标记 → 一次重写（文风档案作作者样本）→ slop-gauge `--diff` 出数据变化行 → stop-slop 质检 → 交付（双道门禁：机械 <55 或 stop-slop <35 → 打回）
 5. **输出**：全文（或改动清单）+ 修改点摘要 + 五维评分表 + metrics 数据变化行 + 残余风险
 
 ## 硬规则（违反任何一条算事故）
@@ -48,4 +48,4 @@ $env:DEAI_GH_PREFIX='<mirror>/'   # GitHub 镜像前缀
 - 新增 deferred 条目：`skill_path` 留 null + `status: "deferred"`
 - 别名产生（用户机器上被改名安装）：追加到该条目的 aliases 数组
 - 本项目自己的改动永远发生在源码仓（本仓库的本地 clone → push GitHub），不要直接改运行态目录（重装会被备份覆盖）
-- **安装来源三级优先**（与安装器实际行为一致）：① 环境变量 `DEAI_OFFLINE_DIR` 个人缓存（按 `<canonical>` 或 `<canonical>-main` 忽略大小写匹配，需含 SKILL.md，命中即用不再碰网络）→ ② 上游拉取（最新）→ ③ 仓库内置 zip `vendor/<canonical>.zip` 兜底（三个必装核心 humanizer-zh / humanizer / stop-slop，均 MIT，原 LICENSE 随 zip 保留，上游挂掉/改名/删库时解压安装）。zip 形式是有意的：整仓保持两级目录（根目录/二级目录/文件），过 WorkBuddy 等平台的目录层级硬校验。铁律：vendor/ 只收 MIT 等可再分发许可证的核心包且 zip 内必须保留原 LICENSE；无 LICENSE 上游（de-ai-prompt-enhancer、chatgpt-comparison-detection）永不入 vendor。注意 vendor 是快照，上游更新要手动重打 zip
+- **安装来源三级优先**（与安装器实际行为一致）：① 环境变量 `DEAI_OFFLINE_DIR` 个人缓存（按 `<canonical>` 或 `<canonical>-main` 忽略大小写匹配，需含 SKILL.md，命中即用不再碰网络）→ ② 上游拉取（最新）→ ③ 仓库内置 zip `vendor/<canonical>.zip` 兜底（四个必装核心 humanizer-zh / humanizer / stop-slop / slop-gauge，均 MIT，原 LICENSE 随 zip 保留，上游挂掉/改名/删库时解压安装）。zip 形式是有意的：整仓保持两级目录（根目录/二级目录/文件），过 WorkBuddy 等平台的目录层级硬校验。铁律：vendor/ 只收 MIT 等可再分发许可证的核心包且 zip 内必须保留原 LICENSE；无 LICENSE 上游（de-ai-prompt-enhancer、chatgpt-comparison-detection）永不入 vendor。注意 vendor 是快照，上游更新要手动重打 zip

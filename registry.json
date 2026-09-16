@@ -16,7 +16,18 @@
       "license": "present",
       "optional": false,
       "bundled": true,
-      "note": "中文主改写：24类AI模式清除 + 注入个性"
+      "note": "中文主改写基座（24类AI模式），humanizer-zh-plus 缺失时的降级位"
+    },
+    {
+      "canonical": "humanizer-zh-plus",
+      "lane": "zh-rewrite",
+      "repo": "https://github.com/Chendestiny/humanizer-zh-plus",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": false,
+      "bundled": true,
+      "note": "中文主刀升级版：24类基座 + 中文原生套路（四字格/文言虚词/机械排比/伪深度/汇报腔）+ 场景档 + 广告法替换；本仓自有 MIT"
     },
     {
       "canonical": "humanizer",
@@ -69,6 +80,17 @@
       "license": "none",
       "optional": true,
       "note": "源头预防：优化提示词让初稿少AI味。上游无LICENSE：仅装时从上游拉取，禁止复制进任何再分发仓库"
+    },
+    {
+      "canonical": "slop-gauge",
+      "lane": "qa-metrics",
+      "repo": "https://github.com/Chendestiny/slop-gauge",
+      "skill_path": ".",
+      "aliases": [],
+      "license": "present",
+      "optional": false,
+      "bundled": true,
+      "note": "双道门禁的机械侧：确定性量表（词表/标点/节奏/结构/归因，diff 与批量），stop-slop 改、slop-gauge 测"
     },
     {
       "canonical": "chatgpt-comparison-detection",

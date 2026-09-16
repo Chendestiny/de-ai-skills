@@ -114,7 +114,7 @@ foreach ($root in $roots) {
     if (Test-Path (Join-Path $p 'SKILL.md')) { $routerDest = $p; break }
 }
 if (-not $routerDest) { $routerDest = Join-Path $agentsRoot 'de-ai' }
-$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'registry.json', 'install.ps1', 'install.sh', 'LICENSE', 'scripts'
+$bundle = 'SKILL.md', 'AGENTS.md', 'README.md', 'registry.json', 'install.ps1', 'install.sh', 'LICENSE'
 if ($CheckOnly) {
     Write-Host ("      would {0} router at: {1}" -f (@{ $true = 'upgrade' }[$routerDest -ne $null] -replace '^$', 'install'), $routerDest)
 } else {

@@ -102,7 +102,7 @@ else
   mkdir -p "$(dirname "$router_dest")"
   backup_and_clear "$router_dest"
   mkdir -p "$router_dest"
-  for item in SKILL.md AGENTS.md README.md registry.json install.ps1 install.sh LICENSE scripts; do
+  for item in SKILL.md AGENTS.md README.md registry.json install.ps1 install.sh LICENSE; do do
     [ -e "$src_root/$item" ] && cp -R "$src_root/$item" "$router_dest/"
   done
   echo "      router installed: $router_dest"

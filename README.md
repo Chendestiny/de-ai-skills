@@ -36,7 +36,7 @@ npx skills add Chendestiny/de-ai-skills
 0 源头预防（可选，动笔前）   提示词先过 de-ai-prompt-enhancer，喂真实素材
 1 标记                      按主技能模式清单逐项标出 AI 痕迹
 2 一次重写                  主技能整段重写 + 文风插槽作"作者样本"注入（DEAI_STYLE_SKILL / 提示词点名 / nuwa 现蒸）
-3 质检门禁                  de-ai-metrics 机械量化（≥55）与 stop-slop 五维（≥35/50）双道门禁，单项不过打回
+3 质检门禁                  slop-gauge 机械量化（≥55）与 stop-slop 五维（≥35/50）双道门禁，单项不过打回
 4 交付                      全文 + 修改点摘要 + 评分表 + 残余风险
 ```
 
@@ -44,9 +44,11 @@ npx skills add Chendestiny/de-ai-skills
 
 | 技能 | 职责 | 上游 | 状态 |
 |---|---|---|---|
-| humanizer-zh | 中文主改写（24 类模式） | [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) | 必装 |
+| humanizer-zh-plus | 中文主改写·plus（24 类基座 + 中文原生套路 + 场景档 + 广告法） | [Chendestiny/humanizer-zh-plus](https://github.com/Chendestiny/humanizer-zh-plus) | 必装 |
+| humanizer-zh | 中文改写基座（plus 缺失时的降级位） | [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) | 必装 |
 | humanizer | 英文主改写（35 模式） | [blader/humanizer](https://github.com/blader/humanizer) | 必装 |
 | stop-slop | 质检评分门禁 | [hardikpandya/stop-slop](https://github.com/hardikpandya/stop-slop) | 必装 |
+| slop-gauge | 双道门禁机械量表（确定性量化 + diff） | [Chendestiny/slop-gauge](https://github.com/Chendestiny/slop-gauge) | 必装 |
 | nuwa-skill | 文风蒸馏（作者样本） | [alchaincyf/nuwa-skill](https://github.com/alchaincyf/nuwa-skill) | 可选 |
 | taste-skill | UI/前端反 slop | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | 可选（别名 design-taste-frontend 视为已装） |
 | de-ai-prompt-enhancer | 源头预防（提示词端） | [gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL](https://github.com/gitliuyun/De-AI-Prompt-Enhancer-Writer-Booster-SKILL) | 可选 |
@@ -57,7 +59,7 @@ npx skills add Chendestiny/de-ai-skills
 ## 设计原则
 
 1. **总入口保持薄**：路由、流水线、冲突裁决、安装自检，四件事，不吸改写逻辑
-2. **上游优先 + 内置兜底**：子技能装时优先从各自上游拉取；三个必装核心（humanizer-zh / humanizer / stop-slop，均 MIT）以 zip 内置包随仓库分发（`vendor/*.zip`，整仓保持两级目录以通过 WorkBuddy 等平台的打包校验），上游失败时自动解压兜底。其余子技能不打包：nuwa 34MB 太重，无 LICENSE 的永不入仓
+2. **上游优先 + 内置兜底**：子技能装时优先从各自上游拉取；四个必装核心（humanizer-zh / humanizer / stop-slop / slop-gauge，均 MIT）以 zip 内置包随仓库分发（`vendor/*.zip`，整仓保持两级目录以通过 WorkBuddy 等平台的打包校验），上游失败时自动解压兜底。其余子技能不打包：nuwa 34MB 太重，无 LICENSE 的永不入仓
 3. **事实红线**：流水线全程不得新增或丢失事实、数字、日期、出处
 4. **写读分离**：改写技能不给自己打分，质检永远由 stop-slop 独立执行
 5. **作者样本优先**：nuwa 蒸馏的用户文风覆盖默认禁令（防止两个改写器互相拆台——一次重写带双参数，不串行两刀）
@@ -65,7 +67,7 @@ npx skills add Chendestiny/de-ai-skills
 ## 许可证
 
 - 本仓库（路由 SKILL.md / registry.json / 安装器 / 文档）：MIT，见 [LICENSE](LICENSE)
-- 三个核心子技能（humanizer / humanizer-zh / stop-slop，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
+- 四个核心子技能（humanizer / humanizer-zh / stop-slop / slop-gauge，MIT）以内置包形式随仓库分发（`vendor/`，原 LICENSE 保留）；其余子技能装时从上游拉取；**无 LICENSE 的两个（de-ai-prompt-enhancer、chatgpt-comparison-detection）只装时拉取，禁止复制进任何再分发仓库**
 
 ## 开发模型
 
