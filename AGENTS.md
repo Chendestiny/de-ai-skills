@@ -43,7 +43,7 @@ $env:DEAI_GH_PREFIX='<mirror>/'   # GitHub 镜像前缀
 
 ## 维护规则
 
-- **registry.json 是唯一清单**：加/换子技能只改它，不改安装器逻辑
+- **registry.json 是唯一清单**（repo / skill_path / aliases / license / origin）：加/换子技能只改它，不改安装器逻辑。`origin=self` 的两条（humanizer-zh-plus、slop-gauge）为本账号自研扩展：仓库与主仓同账号维护，版本同节奏更新，vendor zip 也要主仓重打时一并对齐
 - 上游 URL 变更 / 分支从 main 变 master：改 repo 字段即可，安装器两个分支都会试
 - 新增 deferred 条目：`skill_path` 留 null + `status: "deferred"`
 - 别名产生（用户机器上被改名安装）：追加到该条目的 aliases 数组
